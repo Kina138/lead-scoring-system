@@ -1,0 +1,33 @@
+.feature-box {
+    transition: transform 0.3s;
+    border-radius: 10px;
+    background: #f8f9fa;
+}
+
+.feature-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    font-size: 3rem;
+}
+
+.card {
+    border-radius: 10px;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.6rem;
+}
+
+footer {
+    margin-top: auto;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mt-5">
+    <div class="col-md-6 offset-md-3">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">📤 Upload Lead Data</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" name="file" accept=".csv" required>
+                        <div class="form-text">Upload your lead data in CSV format (max 16MB)</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Required columns:</strong>
+                        <ul class="mb-0">
+                            <li>Lead Origin, Lead Source</li>
+                            <li>TotalVisits, Total Time Spent on Website</li>
+                            <li>Specialization, Last Activity</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        Upload and Analyze
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h2>📊 Lead Scoring Results</h2>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Leads</h6>
+                <h2 class="text-primary">{{ stats.total_leads }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">High Priority</h6>
+                <h2 class="text-success">{{ stats.high_priority }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Medium Priority</h6>
+                <h2 class="text-warning">{{ stats.medium_priority }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Avg Score</h6>
+                <h2 class="text-info">{{ "%.0f"|format(stats.avg_score * 100) }}%</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Top 50 Leads</h5>
+                <a href="{{ url_for('download', filename=stats.filename) }}" class="btn btn-success btn-sm">
+                    ⬇ Download Full Results
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Score</th>
+                                <th>Segment</th>
+                                <th>Specialization</th>
+                                <th>Channel</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in leads %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if lead.conversion_probability >= 0.7 %}bg-success
+                                        {% elif lead.conversion_probability >= 0.3 %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ "%.0f"|format(lead.conversion_probability * 100) }}%
+                                    </span>
+                                </td>
+                                <td>{{ lead.segment }}</td>
+                                <td>{{ lead.Specialization if lead.Specialization else 'N/A' }}</td>
+                                <td><small>{{ lead.channel }}</small></td>
+                                <td><small>{{ lead.recommended_action }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
