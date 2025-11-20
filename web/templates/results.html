@@ -1,92 +1,117 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Scoring Results - AI Lead Scoring</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'base.html' %}
+    
+    <div class="container">
+        <div class="results-header">
+            <h1>📊 Lead Scoring Results</h1>
+        </div>
 
-{% block content %}
-<div class="row mt-4">
-    <div class="col-12">
-        <h2>📊 Lead Scoring Results</h2>
-    </div>
-</div>
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stats-card">
+                <div class="stats-label">Total Leads</div>
+                <div class="stats-value">{{ stats.total_leads }}</div>
+            </div>
+            <div class="stats-card" style="border-left: 4px solid #10b981;">
+                <div class="stats-label">High Priority</div>
+                <div class="stats-value" style="color: #10b981;">{{ stats.high_priority }}</div>
+            </div>
+            <div class="stats-card" style="border-left: 4px solid #f59e0b;">
+                <div class="stats-label">Medium Priority</div>
+                <div class="stats-value" style="color: #f59e0b;">{{ stats.medium_priority }}</div>
+            </div>
+            <div class="stats-card" style="border-left: 4px solid #3b82f6;">
+                <div class="stats-label">Avg Score</div>
+                <div class="stats-value" style="color: #3b82f6;">{{ "%.0f"|format(stats.avg_score * 100) }}%</div>
+            </div>
+        </div>
 
-<div class="row mt-3">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Total Leads</h6>
-                <h2 class="text-primary">{{ stats.total_leads }}</h2>
-            </div>
+        <!-- Download Button -->
+        <div style="text-align: right; margin: 20px 0;">
+            <a href="{{ url_for('download', filename=stats.filename) }}" class="btn btn-primary">
+                ⬇️ Download Full Results
+            </a>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-title text-muted">High Priority</h6>
-                <h2 class="text-success">{{ stats.high_priority }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Medium Priority</h6>
-                <h2 class="text-warning">{{ stats.medium_priority }}</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Avg Score</h6>
-                <h2 class="text-info">{{ "%.0f"|format(stats.avg_score * 100) }}%</h2>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Top 50 Leads</h5>
-                <a href="{{ url_for('download', filename=stats.filename) }}" class="btn btn-success btn-sm">
-                    ⬇ Download Full Results
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Score</th>
-                                <th>Segment</th>
-                                <th>Specialization</th>
-                                <th>Channel</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for lead in leads %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
+        <!-- Top Leads Table -->
+        <div class="results-section">
+            <h2>Top 50 Leads (Full Data)</h2>
+            
+            <div class="table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th class="sticky-col">Rank</th>
+                            {% if leads|length > 0 %}
+                                {% for column in leads[0].keys() %}
+                                    <th>{{ column }}</th>
+                                {% endfor %}
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lead in leads %}
+                        <tr class="lead-row">
+                            <td class="sticky-col rank-cell">
+                                {{ loop.index }}
+                            </td>
+                            {% for column, value in lead.items() %}
                                 <td>
-                                    <span class="badge 
-                                        {% if lead.conversion_probability >= 0.7 %}bg-success
-                                        {% elif lead.conversion_probability >= 0.3 %}bg-warning
-                                        {% else %}bg-secondary{% endif %}">
-                                        {{ "%.0f"|format(lead.conversion_probability * 100) }}%
-                                    </span>
+                                    {% if column == 'conversion_probability' %}
+                                        <span class="score-badge">
+                                            {{ "%.1f"|format(value * 100) }}%
+                                        </span>
+                                    {% elif column == 'segment' %}
+                                        {% if value == 'High' %}
+                                            <span class="badge badge-high">🔥 High</span>
+                                        {% elif value == 'Medium' %}
+                                            <span class="badge badge-medium">⚡ Medium</span>
+                                        {% else %}
+                                            <span class="badge badge-low">💤 Low</span>
+                                        {% endif %}
+                                    {% elif column == 'recommendation' %}
+                                        <div class="recommendation-cell">
+                                            <details>
+                                                <summary>📋 View</summary>
+                                                <div class="recommendation-box">
+                                                    {{ value }}
+                                                </div>
+                                            </details>
+                                        </div>
+                                    {% elif column == 'Prospect ID' %}
+                                        <span class="id-cell">{{ value[:12] }}...</span>
+                                    {% else %}
+                                        <span class="data-cell">{{ value if value is not none else 'N/A' }}</span>
+                                    {% endif %}
                                 </td>
-                                <td>{{ lead.segment }}</td>
-                                <td>{{ lead.Specialization if lead.Specialization else 'N/A' }}</td>
-                                <td><small>{{ lead.channel }}</small></td>
-                                <td><small>{{ lead.recommended_action }}</small></td>
-                            </tr>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="table-tip">
+                <p>
+                    💡 <strong>Tip:</strong> Scroll horizontally to see all {{ leads[0].keys()|length if leads|length > 0 else 0 }} columns. 
+                    Download full results (all {{ stats.total_leads }} leads) using the button above.
+                </p>
             </div>
         </div>
+
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin-top: 40px; margin-bottom: 40px;">
+            <a href="{{ url_for('upload') }}" class="btn btn-secondary">Upload Another File</a>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+        </div>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>

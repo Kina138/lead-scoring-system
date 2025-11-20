@@ -17,11 +17,13 @@ from src.utils.helpers import classify_segment
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['UPLOAD_FOLDER'] = 'data/uploads'
+app.config['UPLOAD_FOLDER'] = '../data/uploads'
+app.config['OUTPUT_FOLDER'] = '../outputs/predictions'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
-# Ensure upload folder exists
+# Ensure all required folders exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Load best model and preprocessor
 try:
@@ -30,9 +32,9 @@ try:
     preprocessor.load('../models/preprocessor.pkl')
     generator = TemplateGenerator()
     print("✓ Models loaded successfully")
-except:
+except Exception as e:
     model, preprocessor, generator = None, None, None
-    print("⚠ Models not found. Please train models first.")
+    print(f"⚠ Models not found: {e}")
 
 @app.route('/')
 def index():
@@ -76,6 +78,10 @@ def predict(filename):
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         df = pd.read_csv(filepath)
         
+        # Remove target column if present (for prediction)
+        if 'Converted' in df.columns:
+            df = df.drop('Converted', axis=1)
+        
         # Preprocess
         X = preprocessor.transform(df)
         
@@ -86,14 +92,15 @@ def predict(filename):
         df['conversion_probability'] = predictions
         df['segment'] = df['conversion_probability'].apply(classify_segment)
         
-        # Generate recommendations
+        # Generate AI recommendations
+        print("Generating AI recommendations...")
         recommendations_df = generator.generate_batch_recommendations(df)
         
         # Combine results
         results_df = pd.concat([df, recommendations_df], axis=1)
         
         # Save results
-        output_path = os.path.join('outputs/predictions', f'results_{filename}')
+        output_path = os.path.join(app.config['OUTPUT_FOLDER'], f'results_{filename}')
         results_df.to_csv(output_path, index=False)
         
         # Calculate statistics
@@ -102,7 +109,7 @@ def predict(filename):
             'high_priority': len(df[df['segment'] == 'High']),
             'medium_priority': len(df[df['segment'] == 'Medium']),
             'low_priority': len(df[df['segment'] == 'Low']),
-            'avg_score': predictions.mean(),
+            'avg_score': float(predictions.mean()),
             'filename': f'results_{filename}'
         }
         
@@ -112,13 +119,16 @@ def predict(filename):
         return render_template('results.html', leads=top_leads, stats=stats)
     
     except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"Error details:\n{error_detail}")
         flash(f'Error processing file: {str(e)}', 'error')
         return redirect(url_for('upload'))
 
 @app.route('/download/<filename>')
 def download(filename):
     """Download results file"""
-    filepath = os.path.join('outputs/predictions', filename)
+    filepath = os.path.join(app.config['OUTPUT_FOLDER'], filename)
     return send_file(filepath, as_attachment=True)
 
 @app.route('/about')
