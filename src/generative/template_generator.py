@@ -1,196 +1,98 @@
 """
-Template-based marketing recommendation generator
+Template generator for personalized lead recommendations
 """
 import pandas as pd
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
-from src.utils.helpers import print_section
-
+from typing import Dict, List
 
 class TemplateGenerator:
-    """Generate marketing recommendations using templates"""
+    """Generate personalized recommendations for leads"""
     
     def __init__(self):
-        self.templates = self._initialize_templates()
-    
-    def _initialize_templates(self):
-        """Initialize recommendation templates"""
-        return {
+        """Initialize template generator"""
+        self.templates = {
             'High': {
-                'subject': '🎯 Special Offer: Your Learning Journey Starts Now',
-                'message_template': """Dear {name},
-
-Based on your exceptional interest in our {specialization} program and {engagement} engagement, 
-we're excited to offer you a personalized enrollment path.
-
-✨ Key Benefits for You:
-• {benefit_1}
-• {benefit_2}
-• {benefit_3}
-
-🎯 Next Step: Schedule a 1-on-1 consultation this week with our enrollment advisor.
-
-We're committed to helping you achieve your career goals.
-
-Best Regards,
-X Education Team""",
-                'channel': 'Email + Phone Call',
-                'timing': 'Within 24 hours',
-                'priority': 'URGENT - Immediate follow-up required',
-                'action': 'Schedule personal consultation call'
+                'email': "Immediate follow-up required. Priority lead with high conversion potential.",
+                'action': "Schedule call within 24 hours. Assign to senior sales rep.",
+                'channel': "Phone call + Personalized email"
             },
             'Medium': {
-                'subject': '📚 Continue Your Learning Journey',
-                'message_template': """Hi {name},
-
-Thank you for your interest in our {specialization} program. 
-
-📖 We recommend:
-• Reviewing our curriculum and success stories
-• Attending our upcoming webinar on {topic}
-• Connecting with our advisors for questions
-
-🎯 Next Step: Join our free webinar to learn about career opportunities in {specialization}.
-
-Looking forward to supporting your goals.
-
-Best Regards,
-X Education Team""",
-                'channel': 'Email',
-                'timing': 'Within 2-3 days',
-                'priority': 'STANDARD - Regular follow-up',
-                'action': 'Send webinar invitation + course materials'
+                'email': "Promising lead. Follow-up recommended within 3 days.",
+                'action': "Send personalized email with relevant course information.",
+                'channel': "Email + Follow-up call"
             },
             'Low': {
-                'subject': '💡 Exploring Your Options? Resources Inside',
-                'message_template': """Hello {name},
-
-We understand that choosing the right program is an important decision.
-
-📚 Free Resources:
-• Guide: "Mastering the Interview"
-• {specialization} alumni success stories
-• Flexible payment options info
-
-🎯 Next Step: Download our free resources and stay updated on industry trends.
-
-Take your time exploring - we're here when you're ready.
-
-Best Regards,
-X Education Team""",
-                'channel': 'Email (nurture sequence)',
-                'timing': 'Within 7 days',
-                'priority': 'LOW - Nurture campaign',
-                'action': 'Add to email nurture sequence'
+                'email': "Add to nurture campaign. Monitor engagement over time.",
+                'action': "Add to automated email sequence. Re-evaluate in 30 days.",
+                'channel': "Automated email campaign"
             }
         }
     
-    def generate_recommendation(self, lead_data, segment):
+    def generate_recommendation(self, lead_data: Dict) -> str:
         """
-        Generate recommendation for a single lead
+        Generate personalized recommendation for a single lead
         
         Args:
-            lead_data: Dict with lead information
-            segment: 'High', 'Medium', or 'Low'
-        
+            lead_data: Dictionary containing lead information
+            
         Returns:
-            dict: Recommendation details
+            Recommendation string
         """
-        template = self.templates[segment]
+        segment = lead_data.get('segment', 'Low')
+        score = lead_data.get('conversion_probability', 0)
         
-        # Extract lead info
-        name = lead_data.get('name', 'Valued Lead')
-        specialization = lead_data.get('Specialization', 'our programs')
+        # Get base template
+        template = self.templates.get(segment, self.templates['Low'])
         
-        # Determine engagement level
-        time_spent = lead_data.get('Total Time Spent on Website', 0)
-        if time_spent > 900:
-            engagement = 'exceptional'
-        elif time_spent > 500:
-            engagement = 'high'
-        else:
-            engagement = 'moderate'
+        # Personalize based on lead data
+        specialization = lead_data.get('Specialization', 'Not specified')
+        lead_source = lead_data.get('Lead Source', 'Unknown')
+        total_time = lead_data.get('Total Time Spent on Website', 0)
         
-        # Get benefits
-        benefits = self._get_benefits(specialization)
+        # Build recommendation
+        recommendation = f"Score: {score*100:.1f}% | Segment: {segment}\n"
+        recommendation += f"Action: {template['action']}\n"
+        recommendation += f"Channel: {template['channel']}\n"
         
-        # Format message
-        message = template['message_template'].format(
-            name=name,
-            specialization=specialization,
-            engagement=engagement,
-            benefit_1=benefits[0],
-            benefit_2=benefits[1],
-            benefit_3=benefits[2],
-            topic='Career Development' if specialization == 'our programs' else specialization
-        )
+        # Add personalization
+        if specialization and str(specialization) != 'nan' and str(specialization) != 'Select':
+            recommendation += f"Focus: Highlight {specialization} program benefits\n"
         
-        return {
-            'segment': segment,
-            'email_subject': template['subject'],
-            'message': message,
-            'channel': template['channel'],
-            'timing': template['timing'],
-            'priority': template['priority'],
-            'recommended_action': template['action'],
-            'conversion_probability': lead_data.get('conversion_probability', 0)
-        }
+        if lead_source and str(lead_source) != 'nan':
+            recommendation += f"Context: Lead from {lead_source}\n"
+        
+        if total_time and total_time > 100:
+            recommendation += f"Note: High engagement detected ({int(total_time)} mins on site)\n"
+        
+        return recommendation
     
-    def _get_benefits(self, specialization):
-        """Get benefits based on specialization"""
-        benefits_map = {
-            'IT': [
-                'Industry-recognized certifications',
-                'Hands-on projects with cutting-edge tools',
-                'Career support and placement assistance'
-            ],
-            'Finance': [
-                'CFA-aligned curriculum',
-                'Financial modeling and analytics',
-                'Industry expert mentorship'
-            ],
-            'Marketing': [
-                'Digital marketing certification',
-                'Real-world campaign projects',
-                'Marketing analytics tools training'
-            ],
-            'HR': [
-                'SHRM-aligned content',
-                'Talent management frameworks',
-                'Organizational behavior insights'
-            ]
-        }
+    def generate_batch_recommendations(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generate recommendations for batch of leads
         
-        default_benefits = [
-            'Expert-led instruction',
-            'Flexible learning schedule',
-            'Lifetime access to materials'
-        ]
-        
-        return benefits_map.get(specialization, default_benefits)
-    
-    def generate_batch_recommendations(self, leads_df):
-        """Generate recommendations for multiple leads"""
-        print_section("Generating Marketing Recommendations")
-        
+        Args:
+            df: DataFrame with lead data (must include 'segment' and 'conversion_probability')
+            
+        Returns:
+            DataFrame with recommendations
+        """
         recommendations = []
         
-        for idx, row in leads_df.iterrows():
-            lead_dict = row.to_dict()
-            segment = row.get('segment', 'Medium')
-            
-            rec = self.generate_recommendation(lead_dict, segment)
-            rec['lead_index'] = idx
-            recommendations.append(rec)
+        for idx, row in df.iterrows():
+            try:
+                # Convert row to dict
+                lead_dict = row.to_dict()
+                
+                # Generate recommendation
+                rec = self.generate_recommendation(lead_dict)
+                recommendations.append(rec)
+            except Exception as e:
+                # Fallback recommendation
+                segment = row.get('segment', 'Low')
+                recommendations.append(f"Segment: {segment} | Standard follow-up recommended.")
         
-        rec_df = pd.DataFrame(recommendations)
+        # Return as DataFrame
+        result_df = pd.DataFrame({
+            'recommendation': recommendations
+        })
         
-        print(f"✓ Generated {len(recommendations)} recommendations")
-        print(f"  High priority: {len(rec_df[rec_df['segment'] == 'High'])}")
-        print(f"  Medium priority: {len(rec_df[rec_df['segment'] == 'Medium'])}")
-        print(f"  Low priority: {len(rec_df[rec_df['segment'] == 'Low'])}")
-        
-        return rec_df
+        return result_df
