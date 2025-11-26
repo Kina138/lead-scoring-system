@@ -43,8 +43,8 @@ class Config:
                 'gradient_boosting': {'n_estimators': 100},
             },
             'segmentation': {
-                'high_threshold': 0.7,
-                'medium_threshold': 0.3,
+                'high_threshold': 0.25,
+                'medium_threshold': 0.08,
             }
         }
     

@@ -88,7 +88,7 @@ def print_metrics(metrics_dict, title="Model Metrics"):
     print('=' * 60)
 
 
-def classify_segment(probability, high_threshold=0.7, low_threshold=0.3):
+def classify_segment(probability, high_threshold=0.25, low_threshold=0.08):
     """
     Classify lead into segment based on conversion probability
     

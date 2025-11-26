@@ -69,8 +69,8 @@ explainability:
     save_plots: true
 
 segmentation:
-  high_threshold: 0.7
-  medium_threshold: 0.3
+  high_threshold: 0.25
+  medium_threshold: 0.08
   labels:
     high: "High Priority"
     medium: "Medium Priority"
